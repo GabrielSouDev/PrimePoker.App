@@ -1,0 +1,82 @@
+﻿<h3>Table</h3>
+
+<SKCanvasView @ref="canvasView"
+              OnPaintSurface="OnPaint"
+              style="width:800px;height:600px;border:1px solid gray;" />
+
+@code {
+    private SKCanvasView? canvasView;
+    private float angle = 0f;
+    private bool isAnimating = false;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isAnimating = true;
+            _ = Animate();
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task Animate()
+    {
+        try
+        {
+            while (isAnimating)
+            {
+                // atualiza o ângulo de rotação
+                angle += 2f;
+                if (angle >= 360f) angle = 0f;
+
+                // força redesenho
+                canvasView?.Invalidate();
+
+                // ~60 FPS
+                await Task.Delay(16);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro em Animate: {ex.Message}");
+        }
+    }
+
+    private void OnPaint(SKPaintSurfaceEventArgs e)
+    {
+        try
+        {
+            var canvas = e.Surface.Canvas;
+            canvas.Clear(SKColors.DarkGreen);
+
+            var rect = new SKRect(100, 100, 200, 250);
+            var center = new SKPoint(rect.MidX, rect.MidY);
+
+            canvas.Save();
+            canvas.Translate(center.X, center.Y);
+            canvas.RotateDegrees(angle);
+
+            var offsetRect = new SKRect(-rect.Width / 2, -rect.Height / 2, rect.Width / 2, rect.Height / 2);
+            var paint = new SKPaint
+            {
+                Color = SKColors.White,
+                IsAntialias = true
+            };
+            canvas.DrawRoundRect(offsetRect, 10, 10, paint);
+
+            var textPaint = new SKPaint
+            {
+                Color = SKColors.Black,
+                TextSize = 24,
+                TextAlign = SKTextAlign.Center
+            };
+            canvas.DrawText("A♠", 0, 10, textPaint);
+
+            canvas.Restore();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro em OnPaint: {ex.Message}");
+        }
+    }
+}
